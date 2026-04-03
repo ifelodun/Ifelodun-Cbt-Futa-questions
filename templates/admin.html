@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            margin:0;
+            font-family:Arial, sans-serif;
+            background:linear-gradient(135deg,#f6d365,#fda085);
+        }
+        .topbar{
+            background:linear-gradient(90deg,#141e30,#243b55);
+            color:white;
+            padding:16px 20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .container{
+            width:90%;
+            max-width:1100px;
+            margin:30px auto;
+        }
+        .card{
+            background:white;
+            border-radius:18px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.12);
+            padding:25px;
+            margin-bottom:20px;
+        }
+        input{
+            padding:10px;
+            margin:5px;
+            border:1px solid #ccc;
+            border-radius:10px;
+        }
+        .btn{
+            text-decoration:none;
+            padding:10px 18px;
+            border-radius:24px;
+            color:white;
+            font-weight:bold;
+            display:inline-block;
+            border:none;
+            cursor:pointer;
+            margin:4px;
+        }
+        .btn-save{ background:#16a34a; }
+        .btn-add{ background:#2563eb; }
+        .btn-delete{ background:#dc2626; }
+        .btn-logout{ background:#dc2626; }
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+        th, td{
+            border:1px solid #ddd;
+            padding:12px;
+            text-align:left;
+        }
+        th{
+            background:#f3f4f6;
+        }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div><strong>Admin Dashboard</strong></div>
+    <a href="/logout" class="btn btn-logout">Logout</a>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2>Add Subject</h2>
+        <form method="POST" action="/add_subject">
+            <input name="name" placeholder="Subject Name" required>
+            <input type="number" name="exam_timer" placeholder="Timer in seconds" required>
+            <button type="submit" class="btn btn-save">Add Subject</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>All Subjects</h2>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Timer</th>
+            </tr>
+            {% for s in subjects %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>{{ s.exam_timer }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Admin Tools</h2>
+        <a href="/add" class="btn btn-add">Add Question</a>
+        <a href="/leaderboard" class="btn btn-add">View Leaderboard</a>
+    </div>
+
+    <div class="card">
+        <h2>Questions</h2>
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Question</th>
+                <th>Answer</th>
+                <th>Delete</th>
+            </tr>
+            {% for q in questions %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ q.subject }}</td>
+                <td>{{ q.question }}</td>
+                <td>{{ q.answer }}</td>
+                <td><a href="/delete/{{ q.id }}" class="btn btn-delete">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+</body>
+</html>
