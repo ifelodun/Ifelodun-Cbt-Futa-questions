@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Questions from Excel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            margin:0;
+            font-family:Arial, sans-serif;
+            background:linear-gradient(135deg,#84fab0,#8fd3f4);
+        }
+        .container{
+            width:90%;
+            max-width:700px;
+            margin:40px auto;
+        }
+        .card{
+            background:white;
+            border-radius:18px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.12);
+            padding:25px;
+        }
+        select, input{
+            width:100%;
+            box-sizing:border-box;
+            padding:12px;
+            margin-bottom:14px;
+            border:1px solid #ccc;
+            border-radius:10px;
+            font-size:15px;
+        }
+        .btn{
+            text-decoration:none;
+            border:none;
+            padding:12px 20px;
+            border-radius:24px;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+            display:inline-block;
+            margin-right:10px;
+        }
+        .btn-back{ background:#6b7280; }
+        .btn-save{ background:#16a34a; }
+        .note{
+            background:#f3f4f6;
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>Import Questions from Excel</h2>
+
+        <div class="note">
+            <strong>Excel format:</strong><br>
+            Column A = question<br>
+            Column B = option 1<br>
+            Column C = option 2<br>
+            Column D = option 3<br>
+            Column E = option 4<br>
+            Column F = answer<br><br>
+            Start real data from row 2.
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            <select name="subject" required>
+                <option value="">Select Subject</option>
+                {% for s in subjects %}
+                <option value="{{ s.name }}">{{ s.name }}</option>
+                {% endfor %}
+            </select>
+
+            <input type="file" name="excel_file" accept=".xlsx" required>
+
+            <a href="/admin" class="btn btn-back">Back</a>
+            <button type="submit" class="btn btn-save">Import Excel</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
