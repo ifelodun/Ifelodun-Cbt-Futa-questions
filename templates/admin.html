@@ -72,6 +72,15 @@
 
 <div class="container">
     <div class="card">
+        <h2>Change Admin Login</h2>
+        <form method="POST" action="/update_admin_account">
+            <input name="new_username" placeholder="New Admin Username" value="{{ admin_account.username }}" required>
+            <input name="new_password" placeholder="New Admin Password" value="{{ admin_account.password }}" required>
+            <button type="submit" class="btn btn-save">Update Admin Login</button>
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Add Subject</h2>
         <form method="POST" action="/add_subject">
             <input name="name" placeholder="Subject Name" required>
