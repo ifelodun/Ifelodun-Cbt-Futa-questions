@@ -26,6 +26,7 @@ class Question(db.Model):
     opt3 = db.Column(db.String(200), nullable=False)
     opt4 = db.Column(db.String(200), nullable=False)
     answer = db.Column(db.String(200), nullable=False)
+    explanation = db.Column(db.String(1000), nullable=True)
 
 
 class Result(db.Model):
@@ -131,12 +132,23 @@ def submit():
 
     score = 0
     total = len(questions)
+    review_rows = []
 
     for q in questions:
         selected = request.form.get(str(q.id), "").strip()
         correct = (q.answer or "").strip()
-        if selected and correct and selected == correct:
+        is_correct = selected and correct and selected == correct
+
+        if is_correct:
             score += 1
+
+        review_rows.append({
+            "question": q.question,
+            "your_answer": selected if selected else "Not Answered",
+            "correct_answer": correct,
+            "explanation": q.explanation if q.explanation else "No explanation provided.",
+            "is_correct": bool(is_correct)
+        })
 
     percentage = round((score / total) * 100, 2) if total else 0
     grade = calculate_grade(percentage)
@@ -158,7 +170,8 @@ def submit():
         percentage=percentage,
         grade=grade,
         student_name=session["student"],
-        subject_name=subject_name
+        subject_name=subject_name,
+        review_rows=review_rows
     )
 
 
@@ -280,6 +293,7 @@ def add():
         opt3 = request.form.get("opt3", "").strip()
         opt4 = request.form.get("opt4", "").strip()
         answer = request.form.get("answer", "").strip()
+        explanation = request.form.get("explanation", "").strip()
 
         if subject and question and opt1 and opt2 and opt3 and opt4 and answer:
             db.session.add(
@@ -290,7 +304,8 @@ def add():
                     opt2=opt2,
                     opt3=opt3,
                     opt4=opt4,
-                    answer=answer
+                    answer=answer,
+                    explanation=explanation
                 )
             )
             db.session.commit()
@@ -317,13 +332,15 @@ def import_excel():
             workbook = load_workbook(upload_path)
             sheet = workbook.active
 
+            # A=question, B=opt1, C=opt2, D=opt3, E=opt4, F=answer, G=explanation
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                question_text = row[0]
-                opt1 = row[1]
-                opt2 = row[2]
-                opt3 = row[3]
-                opt4 = row[4]
-                answer = row[5]
+                question_text = row[0] if len(row) > 0 else None
+                opt1 = row[1] if len(row) > 1 else None
+                opt2 = row[2] if len(row) > 2 else None
+                opt3 = row[3] if len(row) > 3 else None
+                opt4 = row[4] if len(row) > 4 else None
+                answer = row[5] if len(row) > 5 else None
+                explanation = row[6] if len(row) > 6 else ""
 
                 if question_text and opt1 and opt2 and opt3 and opt4 and answer:
                     db.session.add(
@@ -334,7 +351,8 @@ def import_excel():
                             opt2=str(opt2).strip(),
                             opt3=str(opt3).strip(),
                             opt4=str(opt4).strip(),
-                            answer=str(answer).strip()
+                            answer=str(answer).strip(),
+                            explanation=str(explanation).strip() if explanation else ""
                         )
                     )
 
