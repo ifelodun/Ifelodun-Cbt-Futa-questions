@@ -37,6 +37,12 @@ class Result(db.Model):
     total = db.Column(db.Integer, nullable=False)
 
 
+class AdminAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False, default="admin")
+    password = db.Column(db.String(100), nullable=False, default="admin123")
+
+
 def calculate_grade(percentage: float) -> str:
     if percentage >= 70:
         return "A"
@@ -59,7 +65,9 @@ def login():
         admin_username = request.form.get("admin_username", "").strip()
         admin_password = request.form.get("admin_password", "").strip()
 
-        if admin_username == "admin" and admin_password == "admin123":
+        admin_account = AdminAccount.query.first()
+
+        if admin_account and admin_username == admin_account.username and admin_password == admin_account.password:
             session.clear()
             session["admin"] = True
             return redirect(url_for("admin"))
@@ -207,12 +215,32 @@ def admin():
 
     subjects = Subject.query.order_by(Subject.name.asc()).all()
     questions = Question.query.order_by(Question.id.desc()).all()
+    admin_account = AdminAccount.query.first()
 
     return render_template(
         "admin.html",
         subjects=subjects,
-        questions=questions
+        questions=questions,
+        admin_account=admin_account
     )
+
+
+@app.route("/update_admin_account", methods=["POST"])
+def update_admin_account():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    new_username = request.form.get("new_username", "").strip()
+    new_password = request.form.get("new_password", "").strip()
+
+    admin_account = AdminAccount.query.first()
+
+    if admin_account and new_username and new_password:
+        admin_account.username = new_username
+        admin_account.password = new_password
+        db.session.commit()
+
+    return redirect(url_for("admin"))
 
 
 @app.route("/add_subject", methods=["POST"])
@@ -335,6 +363,10 @@ def logout():
 
 with app.app_context():
     db.create_all()
+
+    if AdminAccount.query.first() is None:
+        db.session.add(AdminAccount(username="admin", password="admin123"))
+        db.session.commit()
 
 
 if __name__ == "__main__":
