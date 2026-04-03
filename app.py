@@ -1,0 +1,296 @@
+from flask import Flask, render_template, request, redirect, session, url_for
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.secret_key = "secret123"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
+
+
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    exam_timer = db.Column(db.Integer, nullable=False, default=120)
+
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(100), nullable=False)
+    question = db.Column(db.String(500), nullable=False)
+    opt1 = db.Column(db.String(200), nullable=False)
+    opt2 = db.Column(db.String(200), nullable=False)
+    opt3 = db.Column(db.String(200), nullable=False)
+    opt4 = db.Column(db.String(200), nullable=False)
+    answer = db.Column(db.String(200), nullable=False)
+
+
+class Result(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    student_id = db.Column(db.String(100), nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    total = db.Column(db.Integer, nullable=False)
+
+
+def calculate_grade(percentage: float) -> str:
+    if percentage >= 70:
+        return "A"
+    if percentage >= 60:
+        return "B"
+    if percentage >= 50:
+        return "C"
+    if percentage >= 45:
+        return "D"
+    if percentage >= 40:
+        return "E"
+    return "F"
+
+
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        student_name = request.form.get("name", "").strip()
+        student_id = request.form.get("student_id", "").strip()
+        admin_username = request.form.get("admin_username", "").strip()
+        admin_password = request.form.get("admin_password", "").strip()
+
+        if admin_username == "admin" and admin_password == "admin123":
+            session.clear()
+            session["admin"] = True
+            return redirect(url_for("admin"))
+
+        if student_name and student_id:
+            session.clear()
+            session["student"] = student_name
+            session["student_id"] = student_id
+            return redirect(url_for("home"))
+
+    return render_template("login.html")
+
+
+@app.route("/home")
+def home():
+    if "student" not in session:
+        return redirect(url_for("login"))
+
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
+    return render_template(
+        "home.html",
+        subjects=subjects,
+        student_name=session["student"]
+    )
+
+
+@app.route("/student/<int:subject_id>")
+def student(subject_id):
+    if "student" not in session:
+        return redirect(url_for("login"))
+
+    subject = Subject.query.get_or_404(subject_id)
+    questions = Question.query.filter_by(subject=subject.name).order_by(Question.id.asc()).all()
+
+    if not questions:
+        return redirect(url_for("home"))
+
+    session["current_subject"] = subject.name
+
+    return render_template(
+        "student.html",
+        questions=questions,
+        exam_timer=subject.exam_timer,
+        student_name=session["student"],
+        subject_name=subject.name
+    )
+
+
+@app.route("/submit", methods=["POST"])
+def submit():
+    if "student" not in session:
+        return redirect(url_for("login"))
+
+    subject_name = session.get("current_subject")
+    if not subject_name:
+        return redirect(url_for("home"))
+
+    questions = Question.query.filter_by(subject=subject_name).order_by(Question.id.asc()).all()
+    if not questions:
+        return redirect(url_for("home"))
+
+    score = 0
+    total = len(questions)
+
+    for q in questions:
+        selected = request.form.get(str(q.id), "").strip()
+        correct = (q.answer or "").strip()
+        if selected and correct and selected == correct:
+            score += 1
+
+    percentage = round((score / total) * 100, 2) if total else 0
+    grade = calculate_grade(percentage)
+
+    result = Result(
+        name=session["student"],
+        student_id=session["student_id"],
+        subject=subject_name,
+        score=score,
+        total=total
+    )
+    db.session.add(result)
+    db.session.commit()
+
+    return render_template(
+        "result.html",
+        score=score,
+        total=total,
+        percentage=percentage,
+        grade=grade,
+        student_name=session["student"],
+        subject_name=subject_name
+    )
+
+
+@app.route("/history")
+def history():
+    if "student" not in session:
+        return redirect(url_for("login"))
+
+    results = Result.query.filter_by(
+        student_id=session["student_id"]
+    ).order_by(Result.id.desc()).all()
+
+    history_rows = []
+    for r in results:
+        percentage = round((r.score / r.total) * 100, 2) if r.total else 0
+        history_rows.append({
+            "subject": r.subject,
+            "score": r.score,
+            "total": r.total,
+            "percentage": percentage,
+            "grade": calculate_grade(percentage),
+        })
+
+    return render_template(
+        "history.html",
+        student_name=session["student"],
+        student_id=session["student_id"],
+        results=history_rows
+    )
+
+
+@app.route("/leaderboard")
+def leaderboard():
+    results = Result.query.order_by(Result.score.desc(), Result.id.asc()).all()
+
+    leaderboard_rows = []
+    for r in results:
+        percentage = round((r.score / r.total) * 100, 2) if r.total else 0
+        leaderboard_rows.append({
+            "name": r.name,
+            "student_id": r.student_id,
+            "subject": r.subject,
+            "score": r.score,
+            "total": r.total,
+            "percentage": percentage,
+            "grade": calculate_grade(percentage),
+        })
+
+    return render_template("leaderboard.html", results=leaderboard_rows)
+
+
+@app.route("/admin")
+def admin():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
+    questions = Question.query.order_by(Question.id.desc()).all()
+
+    return render_template(
+        "admin.html",
+        subjects=subjects,
+        questions=questions
+    )
+
+
+@app.route("/add_subject", methods=["POST"])
+def add_subject():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    name = request.form.get("name", "").strip()
+    exam_timer = request.form.get("exam_timer", "").strip()
+
+    if name and exam_timer.isdigit():
+        existing = Subject.query.filter_by(name=name).first()
+        if not existing:
+            db.session.add(
+                Subject(
+                    name=name,
+                    exam_timer=int(exam_timer)
+                )
+            )
+            db.session.commit()
+
+    return redirect(url_for("admin"))
+
+
+@app.route("/add", methods=["GET", "POST"])
+def add():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
+
+    if request.method == "POST":
+        subject = request.form.get("subject", "").strip()
+        question = request.form.get("question", "").strip()
+        opt1 = request.form.get("opt1", "").strip()
+        opt2 = request.form.get("opt2", "").strip()
+        opt3 = request.form.get("opt3", "").strip()
+        opt4 = request.form.get("opt4", "").strip()
+        answer = request.form.get("answer", "").strip()
+
+        if subject and question and opt1 and opt2 and opt3 and opt4 and answer:
+            db.session.add(
+                Question(
+                    subject=subject,
+                    question=question,
+                    opt1=opt1,
+                    opt2=opt2,
+                    opt3=opt3,
+                    opt4=opt4,
+                    answer=answer
+                )
+            )
+            db.session.commit()
+            return redirect(url_for("admin"))
+
+    return render_template("add.html", subjects=subjects)
+
+
+@app.route("/delete/<int:id>")
+def delete(id):
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    q = Question.query.get_or_404(id)
+    db.session.delete(q)
+    db.session.commit()
+    return redirect(url_for("admin"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+with app.app_context():
+    db.create_all()
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
