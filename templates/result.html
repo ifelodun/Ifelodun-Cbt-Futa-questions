@@ -7,20 +7,21 @@
         body{
             margin:0;
             min-height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
             font-family:Arial, sans-serif;
             background:linear-gradient(135deg,#89f7fe,#66a6ff);
+        }
+        .container{
+            width:90%;
+            max-width:900px;
+            margin:30px auto;
         }
         .card{
             background:white;
             border-radius:20px;
             padding:35px;
-            width:90%;
-            max-width:520px;
             text-align:center;
             box-shadow:0 10px 24px rgba(0,0,0,0.15);
+            margin-bottom:20px;
         }
         .score{
             font-size:46px;
@@ -33,6 +34,19 @@
             font-weight:bold;
             color:#1d4ed8;
         }
+        .review-card{
+            background:white;
+            border-radius:16px;
+            padding:20px;
+            margin-bottom:16px;
+            box-shadow:0 6px 16px rgba(0,0,0,0.12);
+        }
+        .wrong{
+            border-left:6px solid #dc2626;
+        }
+        .correct{
+            border-left:6px solid #16a34a;
+        }
         .btn{
             display:inline-block;
             margin-top:16px;
@@ -43,16 +57,37 @@
             border-radius:24px;
             font-weight:bold;
         }
+        .label{
+            font-weight:bold;
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <h2>{{ subject_name }} Result</h2>
-    <p>Student: {{ student_name }}</p>
-    <div class="score">{{ score }}/{{ total }}</div>
-    <p>Percentage: {{ percentage }}%</p>
-    <div class="grade">Grade: {{ grade }}</div>
-    <a href="/home" class="btn">Back Home</a>
+<div class="container">
+    <div class="card">
+        <h2>{{ subject_name }} Result</h2>
+        <p>Student: {{ student_name }}</p>
+        <div class="score">{{ score }}/{{ total }}</div>
+        <p>Percentage: {{ percentage }}%</p>
+        <div class="grade">Grade: {{ grade }}</div>
+        <a href="/home" class="btn">Back Home</a>
+    </div>
+
+    <h2 style="color:white;">Answer Review</h2>
+
+    {% for row in review_rows %}
+    <div class="review-card {% if row.is_correct %}correct{% else %}wrong{% endif %}">
+        <p><span class="label">Question:</span> {{ row.question }}</p>
+        <p><span class="label">Your Answer:</span> {{ row.your_answer }}</p>
+
+        {% if not row.is_correct %}
+            <p><span class="label">Correct Answer:</span> {{ row.correct_answer }}</p>
+            <p><span class="label">Explanation:</span> {{ row.explanation }}</p>
+        {% else %}
+            <p><span class="label">Status:</span> Correct</p>
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 </body>
 </html>
