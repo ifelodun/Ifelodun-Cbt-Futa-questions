@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CBT Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            min-height:100vh;
+            margin:0;
+            font-family:Arial,sans-serif;
+            background:linear-gradient(135deg,#4facfe,#00f2fe,#43e97b);
+        }
+        .main-card{
+            max-width:750px;
+            margin:50px auto;
+            background:white;
+            border-radius:20px;
+            box-shadow:0 15px 35px rgba(0,0,0,0.2);
+            overflow:hidden;
+        }
+        .header{
+            background:linear-gradient(90deg,#6a11cb,#2575fc);
+            color:white;
+            text-align:center;
+            padding:25px;
+        }
+        .body{
+            padding:30px;
+            text-align:center;
+        }
+        .subject-box{
+            margin:18px 0;
+            padding:20px;
+            background:#f3f4f6;
+            border-radius:14px;
+        }
+        .btn{
+            display:inline-block;
+            text-decoration:none;
+            color:white;
+            padding:10px 20px;
+            border-radius:30px;
+            font-weight:bold;
+            margin-top:10px;
+            background:#16a34a;
+        }
+        .btn-secondary{
+            background:#2563eb;
+        }
+        .btn-logout{
+            background:#dc2626;
+            margin-top:20px;
+        }
+    </style>
+</head>
+<body>
+<div class="main-card">
+    <div class="header">
+        <h2>CBT Platform</h2>
+        <p>Select Your Subject</p>
+    </div>
+
+    <div class="body">
+        <h3>Welcome, {{ student_name }}</h3>
+
+        {% for subject in subjects %}
+        <div class="subject-box">
+            <h3>{{ subject.name }}</h3>
+            <p>Timer: {{ subject.exam_timer }} seconds</p>
+            <a href="/student/{{ subject.id }}" class="btn">Start Exam</a>
+        </div>
+        {% endfor %}
+
+        <a href="/history" class="btn btn-secondary">My Result History</a>
+        <a href="/leaderboard" class="btn btn-secondary">Leaderboard</a>
+        <br>
+        <a href="/logout" class="btn btn-logout">Logout</a>
+    </div>
+</div>
+</body>
+</html>
