@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
+from openpyxl import load_workbook
+import os
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -157,26 +159,24 @@ def history():
     if "student" not in session:
         return redirect(url_for("login"))
 
-    results = Result.query.filter_by(
-        student_id=session["student_id"]
-    ).order_by(Result.id.desc()).all()
+    results = Result.query.filter_by(student_id=session["student_id"]).order_by(Result.id.desc()).all()
 
-    history_rows = []
+    rows = []
     for r in results:
         percentage = round((r.score / r.total) * 100, 2) if r.total else 0
-        history_rows.append({
+        rows.append({
             "subject": r.subject,
             "score": r.score,
             "total": r.total,
             "percentage": percentage,
-            "grade": calculate_grade(percentage),
+            "grade": calculate_grade(percentage)
         })
 
     return render_template(
         "history.html",
         student_name=session["student"],
         student_id=session["student_id"],
-        results=history_rows
+        results=rows
     )
 
 
@@ -184,20 +184,20 @@ def history():
 def leaderboard():
     results = Result.query.order_by(Result.score.desc(), Result.id.asc()).all()
 
-    leaderboard_rows = []
+    rows = []
     for r in results:
         percentage = round((r.score / r.total) * 100, 2) if r.total else 0
-        leaderboard_rows.append({
+        rows.append({
             "name": r.name,
             "student_id": r.student_id,
             "subject": r.subject,
             "score": r.score,
             "total": r.total,
             "percentage": percentage,
-            "grade": calculate_grade(percentage),
+            "grade": calculate_grade(percentage)
         })
 
-    return render_template("leaderboard.html", results=leaderboard_rows)
+    return render_template("leaderboard.html", results=rows)
 
 
 @app.route("/admin")
@@ -269,6 +269,51 @@ def add():
             return redirect(url_for("admin"))
 
     return render_template("add.html", subjects=subjects)
+
+
+@app.route("/import_excel", methods=["GET", "POST"])
+def import_excel():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
+
+    if request.method == "POST":
+        excel_file = request.files.get("excel_file")
+        selected_subject = request.form.get("subject", "").strip()
+
+        if excel_file and selected_subject:
+            upload_path = os.path.join("/tmp", excel_file.filename)
+            excel_file.save(upload_path)
+
+            workbook = load_workbook(upload_path)
+            sheet = workbook.active
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                question_text = row[0]
+                opt1 = row[1]
+                opt2 = row[2]
+                opt3 = row[3]
+                opt4 = row[4]
+                answer = row[5]
+
+                if question_text and opt1 and opt2 and opt3 and opt4 and answer:
+                    db.session.add(
+                        Question(
+                            subject=selected_subject,
+                            question=str(question_text).strip(),
+                            opt1=str(opt1).strip(),
+                            opt2=str(opt2).strip(),
+                            opt3=str(opt3).strip(),
+                            opt4=str(opt4).strip(),
+                            answer=str(answer).strip()
+                        )
+                    )
+
+            db.session.commit()
+            return redirect(url_for("admin"))
+
+    return render_template("import_excel.html", subjects=subjects)
 
 
 @app.route("/delete/<int:id>")
