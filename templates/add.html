@@ -20,7 +20,7 @@
             box-shadow:0 8px 20px rgba(0,0,0,0.12);
             padding:25px;
         }
-        input, select{
+        input, select, textarea{
             width:100%;
             box-sizing:border-box;
             padding:12px;
@@ -28,6 +28,10 @@
             border:1px solid #ccc;
             border-radius:10px;
             font-size:15px;
+        }
+        textarea{
+            min-height:120px;
+            resize:vertical;
         }
         .btn{
             text-decoration:none;
@@ -62,6 +66,7 @@
             <input name="opt3" placeholder="Option 3" required>
             <input name="opt4" placeholder="Option 4" required>
             <input name="answer" placeholder="Correct answer" required>
+            <textarea name="explanation" placeholder="Explanation for the correct answer"></textarea>
 
             <a href="/admin" class="btn btn-back">Back</a>
             <button type="submit" class="btn btn-save">Save Question</button>
