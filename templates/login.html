@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CBT Platform Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            margin:0;
+            font-family:Arial, sans-serif;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:linear-gradient(135deg,#667eea,#764ba2);
+        }
+        .container{
+            width:90%;
+            max-width:900px;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:20px;
+        }
+        .card{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.2);
+        }
+        h2{
+            text-align:center;
+            margin-bottom:20px;
+        }
+        input{
+            width:100%;
+            box-sizing:border-box;
+            padding:12px;
+            margin-bottom:15px;
+            border-radius:10px;
+            border:1px solid #ccc;
+            font-size:15px;
+        }
+        button{
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:25px;
+            font-weight:bold;
+            color:white;
+            cursor:pointer;
+            font-size:16px;
+        }
+        .student-btn{ background:#16a34a; }
+        .admin-btn{ background:#2563eb; }
+        .title{
+            text-align:center;
+            color:white;
+            margin-bottom:20px;
+            font-size:28px;
+            font-weight:bold;
+        }
+        .footer{
+            text-align:center;
+            color:white;
+            margin-top:15px;
+            font-size:14px;
+        }
+        @media (max-width:700px){
+            .container{ grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="title">🎓 CBT Platform</div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Student Login</h2>
+            <form method="POST">
+                <input name="name" placeholder="Enter Name" required>
+                <input name="student_id" placeholder="Enter Student ID" required>
+                <button type="submit" class="student-btn">Start Exam</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Admin Login</h2>
+            <form method="POST">
+                <input name="admin_username" placeholder="Username" required>
+                <input name="admin_password" type="password" placeholder="Password" required>
+                <button type="submit" class="admin-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">
+        Developed by <strong>ifelodun</strong> | noplysola@gmail.com
+    </div>
+</div>
+</body>
+</html>
