@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Result History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{
+            margin:0;
+            font-family:Arial, sans-serif;
+            background:linear-gradient(135deg,#cfd9df,#e2ebf0);
+        }
+        .container{
+            width:90%;
+            max-width:1000px;
+            margin:30px auto;
+        }
+        .card{
+            background:white;
+            border-radius:18px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.12);
+            padding:25px;
+        }
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+        th, td{
+            border:1px solid #ddd;
+            padding:12px;
+            text-align:left;
+        }
+        th{
+            background:#f3f4f6;
+        }
+        .btn{
+            display:inline-block;
+            margin-top:16px;
+            text-decoration:none;
+            background:#2563eb;
+            color:white;
+            padding:12px 22px;
+            border-radius:24px;
+            font-weight:bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>Result History</h2>
+        <p>Name: {{ student_name }}</p>
+        <p>Student ID: {{ student_id }}</p>
+
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Score</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+            </tr>
+            {% for r in results %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.subject }}</td>
+                <td>{{ r.score }}</td>
+                <td>{{ r.total }}</td>
+                <td>{{ r.percentage }}%</td>
+                <td>{{ r.grade }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <a href="/home" class="btn">Back Home</a>
+    </div>
+</div>
+</body>
+</html>
